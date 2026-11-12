@@ -1,9 +1,9 @@
-# Cutest Picture — make.fun entry
+# Make the cutest picture — cutest-picture-01
 
-`main.py` copies the bundled generated image `picture.jpg` to the
-output path (`entry.png`) deterministically: it only reads the bundled
-file and writes its bytes unchanged, so every run produces exactly the
-same output.
+Entry for the **Make the cutest picture** (cutest-picture-01) competition on make.fun.
 
-The image shows a chubby baby otter with big bright eyes hugging its
-favorite smooth round pebble.
+The picture shows a fluffy ginger baby kitten with enormous sparkling amber eyes hugging a tiny yellow baby duckling that wears a cracked eggshell as a hat.
+
+Running `main.py` copies the bundled `picture.jpg` to `$MAKEFUN_OUTPUT_DIR/entry.png` (default `/output/entry.png`), byte for byte, with no network access.
+
+Referral: https://make.fun/r/byvgg6sg

@@ -1,36 +1,48 @@
-"""Write our picture to /output/entry.png.
+"""Copy the bundled picture into the output directory as entry.png.
 
-The picture is a generated image: a chubby baby otter sitting up facing
-the camera, huge round bright eyes wide open, hugging its favorite
-smooth round pebble to its chest with both paws, round belly, warm
-golden light. The program only copies the bundled image file, so every
-run writes exactly the same bytes.
+The bundled picture.jpg is a soft stylized digital painting: a round,
+fluffy ginger baby kitten with huge sparkling amber eyes and pink cheeks
+wraps its little paws around a tiny yellow baby duckling. The duckling
+wears a fragment of its own cracked eggshell like a small hat, and both
+sit against a plain warm cream backdrop.
+
+The program performs no network access and no processing of the image
+bytes; it validates the bundled file and copies it verbatim, so every
+run produces exactly the same output file.
 """
 
+import hashlib
 import os
-import shutil
+import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-SOURCE = HERE / "picture.jpg"
 MAX_BYTES = 1_048_576
-OUT_DIR = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
+JPEG_MAGIC = b"\xff\xd8"
 
 
-def main() -> None:
-    data = SOURCE.read_bytes()
-    if not data.startswith(b"\xff\xd8"):
+def main() -> int:
+    here = Path(__file__).resolve().parent
+    source = here / "picture.jpg"
+
+    data = source.read_bytes()
+    if not data.startswith(JPEG_MAGIC):
         raise ValueError(
-            f"picture.jpg is not a JPEG image: it starts with {data[:2]!r}, "
-            "expected the JPEG magic bytes b'\\xff\\xd8'"
+            "picture.jpg does not start with the JPEG magic bytes ff d8"
         )
     if len(data) > MAX_BYTES:
-        raise ValueError(f"picture.jpg is {len(data)} bytes, over the {MAX_BYTES} byte limit")
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    out = OUT_DIR / "entry.png"
-    shutil.copyfile(SOURCE, out)
-    print(f"wrote {out} ({len(data)} bytes)")
+        raise ValueError(
+            f"picture.jpg is {len(data)} bytes, over the {MAX_BYTES} byte limit"
+        )
+
+    out_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    target = out_dir / "entry.png"
+    target.write_bytes(data)
+
+    digest = hashlib.sha256(data).hexdigest()
+    print(f"wrote {target} ({len(data)} bytes, sha256 {digest})")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
