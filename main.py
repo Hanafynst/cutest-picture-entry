@@ -1,48 +1,36 @@
-"""Copy the bundled picture into the output directory as entry.png.
+"""Copy our cutest-picture entry image to the output directory.
 
-The bundled picture.jpg is a soft stylized digital painting: a round,
-fluffy ginger baby kitten with huge sparkling amber eyes and pink cheeks
-wraps its little paws around a tiny yellow baby duckling. The duckling
-wears a fragment of its own cracked eggshell like a small hat, and both
-sit against a plain warm cream backdrop.
-
-The program performs no network access and no processing of the image
-bytes; it validates the bundled file and copies it verbatim, so every
-run produces exactly the same output file.
+The picture shows a chubby white baby seal drawn in a soft kawaii
+style: oversized starry eyes, pink cheeks, and a bright orange
+starfish hugged against its chest, floating on a mint-blue backdrop.
+The script only copies the bundled JPEG, so the result is identical
+on every run.
 """
 
 import hashlib
 import os
-import sys
+import shutil
 from pathlib import Path
 
+HERE = Path(__file__).resolve().parent
+SOURCE = HERE / "picture.jpg"
 MAX_BYTES = 1_048_576
-JPEG_MAGIC = b"\xff\xd8"
+OUT_DIR = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
 
 
-def main() -> int:
-    here = Path(__file__).resolve().parent
-    source = here / "picture.jpg"
-
-    data = source.read_bytes()
-    if not data.startswith(JPEG_MAGIC):
-        raise ValueError(
-            "picture.jpg does not start with the JPEG magic bytes ff d8"
-        )
+def main() -> None:
+    data = SOURCE.read_bytes()
+    if not data.startswith(b"\xff\xd8"):
+        found = data[:2].hex() if data else "empty file"
+        raise ValueError(f"picture.jpg is not a JPEG image: expected magic bytes ffd8, found {found}")
     if len(data) > MAX_BYTES:
-        raise ValueError(
-            f"picture.jpg is {len(data)} bytes, over the {MAX_BYTES} byte limit"
-        )
-
-    out_dir = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
-    out_dir.mkdir(parents=True, exist_ok=True)
-    target = out_dir / "entry.png"
-    target.write_bytes(data)
-
-    digest = hashlib.sha256(data).hexdigest()
-    print(f"wrote {target} ({len(data)} bytes, sha256 {digest})")
-    return 0
+        raise ValueError(f"picture.jpg is {len(data)} bytes, over the {MAX_BYTES} byte limit")
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out = OUT_DIR / "entry.png"
+    shutil.copyfile(SOURCE, out)
+    digest = hashlib.sha256(out.read_bytes()).hexdigest()
+    print(f"wrote {out} ({len(data)} bytes, sha256 {digest})")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
